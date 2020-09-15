@@ -71,20 +71,23 @@ exports.allusers  = (req, res) => {
 
 exports.addExersise = (req, res) => {
 
-  var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
+  
   console.log("add");
-
+  
   let log = 
     {
     description: req.body.description,
     duration: parseInt(req.body.duration),
     date: req.body.date 
+    //
     }
 
   console.log(log);
   if (typeof log.date === "undefined" || log.date == ''){
   log.date = new Date().toString().substring(0,15)
+  }
+  else{
+   log.date =new Date(req.body.date).toString().substring(0,15) 
   }
   console.log(log);
 
@@ -102,7 +105,7 @@ exports.addExersise = (req, res) => {
           description: log.description,
           duration: log.duration,
           _id: userReply._id, //req.body.userId,
-          date: log.date  //toDateString(),
+          date: log.date//.toString().substring(0,15)  //toDateString(),
           
           
         }
@@ -124,29 +127,69 @@ exports.addExersise = (req, res) => {
 
 exports.getlog = (req, res) => {
 
+  console.log('/////////////////Get log///////////////////');
+  console.log(req.query);
+
+  let limit = req.query.limit;
+  let from = req.query.from;
+  let to = req.query.to;
+
+  User.findOne({_id: req.query.userId}, (err, userReply) => {
+    if(err){
+      console.log("finduser_error")
+    }
+    if(userReply) {
+      //res.json(userReply);
+      console.log(userReply);
+
+    let count = userReply.log.length;
+
+    let replytosend = {
+                _id: userReply._id,
+                username: userReply.username,
+                count: count,
+                log : userReply.log
+                }
+
+    
+    if(from){
+      let dateFrom =new Date(from).getTime()//.toString().substring(0,15);
+      replytosend.log = replytosend.log.filter(dates => 
+      {let compDate  = new Date(dates.date).getTime()
+        return compDate >= dateFrom
+      })
+      console.log("from reply")
+      console.log(replytosend.log);
+    }
+    
+    if(to){
+      let dateTo =new Date(to).getTime() //toString().substring(0,15);
+      replytosend.log = replytosend.log.filter(dates => 
+      {let compDate  = new Date(dates.date).getTime()
+        return compDate <= dateTo
+      })
+      console.log("fo reply")
+      console.log(replytosend.log);
+    }
+   
+    
+
+    
+    
+    if(limit){
+      replytosend.log = replytosend.log.slice(0, limit);
+      }
+
+
+
+
+    res.json(replytosend);
+    console.log(replytosend);
+    }
+  })
+  
+  
 
 
 }
 
-//{"_id":"5f601eba5ec17200307807ef","username":"zzzz","date":"Tue Sep 15 2020","duration":19,"description":"run"}
-//{"_id":"5f60207eb74491129101e779","username":"zzzz","date":"Tue Sep 15 2020","duration":19,"description":"asd"}
-
-
-
-//{"_id":"5f601eba5ec17200307807ef","username":"123","date":"Tue Sep 15 2020","duration":19,"description":"run"}
-//{"_id":"5f6016614e8e970d07e20dd4","username":"123","date":"Tue Sep 15 2020","duration":123,"description":"123"}
-
-
-// const expected = {
-//   username: 'fcc_test_1596648410971', // Obviously the numbers change
-//   description: 'test',
-//   duration: 60,
-//   _id: 5f29cd9e782d5f13d127b456, // Example id
-//   date: 'Mon Jan 01 1990'
-// }
-
-          // _id: userReply._id,
-          // username : userReply.username,
-          // date: log.date,
-          // duration: log.duration,
-          // description: log.description
